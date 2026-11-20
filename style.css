@@ -29,3 +29,44 @@ aside{max-height:100dvh;overflow:auto}
 @media(max-width:1050px){.home-grid .art{grid-column:1/-1;background-position:center 65%}}
 @media(max-width:760px){.roster-layout{grid-template-columns:minmax(0,1fr)}.hero-list{max-height:36vh}.hero-detail .hero-art{width:min(100%,220px)}.workshop-art .apc{grid-column:1/-1;grid-row:1;max-height:230px}.workshop-art{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){aside{max-height:none}.part{grid-template-columns:1fr;justify-items:center;text-align:center}.part img{grid-row:auto;width:min(100%,65px)}.metrics{grid-template-columns:repeat(auto-fit,minmax(min(100%,105px),1fr))}.card{padding:10px}.hero-list button{grid-template-columns:2.5rem minmax(0,1fr) auto;gap:5px}.chip-board{padding:7px;gap:5px}}
+
+/* Keep the desktop layout consistent on wide displays. */
+body {
+  max-width: 1440px;
+  margin-inline: auto;
+}
+.workshop-art {
+  max-width: 980px;
+  margin: 16px auto 0;
+}
+.workshop-art .apc {
+  place-self: center;
+  width: 100%;
+  height: auto;
+  max-width: 360px;
+  aspect-ratio: 1;
+}
+.part {
+  align-content: center;
+  padding: 10px;
+}
+.part img {
+  border-radius: 5px;
+}
+@media (min-width: 761px) {
+  .workshop-art {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
+    grid-template-rows: repeat(3, minmax(76px, 1fr));
+  }
+  .workshop-art .part:nth-child(2) { grid-area: 1 / 1; }
+  .workshop-art .part:nth-child(3) { grid-area: 2 / 1; }
+  .workshop-art .part:nth-child(4) { grid-area: 3 / 1; }
+  .workshop-art .part:nth-child(5) { grid-area: 1 / 3; }
+  .workshop-art .part:nth-child(6) { grid-area: 2 / 3; }
+  .workshop-art .part:nth-child(7) { grid-area: 3 / 3; }
+}
+@media (max-width: 760px) {
+  .workshop-art .apc {
+    width: min(100%, 230px);
+  }
+}
