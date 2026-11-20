@@ -67,7 +67,10 @@ function home(section='Dashboard') {
     return colors[i]+' '+start+'deg '+Math.max(start,cursor-1.7)+'deg, #101d22 '+Math.max(start,cursor-1.7)+'deg '+cursor+'deg';
   });
   const donut=total ? '<div class="chart" style="background:conic-gradient('+arcs.join(',')+')"><span>'+((categories[0][1]/total)*100).toFixed(1)+'%<br>Troop</span></div>' : '';
-  const breakdown=rows(categories.map(([name,value],i)=>[name,number.format(value)+' · '+(total ? (value/total*100).toFixed(1)+'%' : '—')]));
+  const breakdown = '<dl class="cp-breakdown">'+categories.map(([name,value],i)=>{
+    const percent = total ? (value/total*100).toFixed(1)+'%' : '—';
+    return '<div><dt><span class="cp-swatch" aria-hidden="true" style="background:'+colors[i]+'"></span>'+esc(name)+'</dt><dd><span>'+number.format(value)+'</span><strong>'+percent+'</strong></dd></div>';
+  }).join('')+'</dl>';
   const activity=card('Combat Record',rows(['Victory','Defeat','Lost','Scout Times'].map(key=>[key,read(cpText,key)])));
   const details=captured('CP Details comparison');
   const record=card('Profile Record',rows([['Highest CP',read(cpText,'Highest CP on Record')],['Watchtower',read(details,'Watchtower')],['Overall grade',read(details,'Overall grade')],['State',profile.State]]));
