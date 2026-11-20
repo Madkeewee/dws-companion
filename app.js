@@ -82,11 +82,14 @@ const heroes = [...new Set(newest.map(entry => entry.Hero).filter(Boolean))].map
   const progress = newest.find(entry => entry.Hero === name && entry.FullStars != null) || {};
   return { name, stats, progress };
 }).sort((a,b) => (b.stats.Power || 0) - (a.stats.Power || 0));
+const heroDetailArt = {"andre":{"gear":true,"skills":true},"angela":{"gear":true,"skills":true},"barnett":{"gear":true,"skills":true},"bob":{"gear":true,"skills":true},"catherine-rex":{"gear":true,"skills":true},"cecilia":{"gear":true,"skills":true},"corleone":{"gear":true,"skills":true},"cyrus":{"gear":true,"skills":true},"darian":{"gear":true,"skills":true},"eddie":{"gear":true,"skills":true},"evans":{"gear":true,"skills":true},"farhad":{"gear":true,"skills":true},"francis":{"gear":true,"skills":true},"guy":{"gear":true,"skills":true},"joe":{"gear":true,"skills":true},"kylie":{"gear":true,"skills":true},"lan":{"gear":true,"skills":true},"liz":{"gear":true,"skills":true},"lucas":{"gear":true,"skills":true},"marcia":{"gear":true,"skills":true},"margaret":{"gear":true,"skills":true},"megan":{"gear":true,"skills":true},"musashimaru":{"gear":true,"skills":true},"natasha":{"gear":true,"skills":true},"noah":{"gear":true,"skills":true},"quinn":{"gear":true,"skills":true},"rosa":{"gear":true,"skills":true},"ruby":{"gear":true,"skills":true},"ryan":{"gear":false,"skills":true},"scarlett":{"gear":true,"skills":true},"selena":{"gear":true,"skills":true},"shadow":{"gear":true,"skills":true},"tristan":{"gear":true,"skills":true},"victor":{"gear":true,"skills":true},"willow":{"gear":true,"skills":true}};
+const heroSlug = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 const heroArt = name => {
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const slug = heroSlug(name);
   return '<span class="hero-art"><span aria-hidden="true">'+esc(name[0])+'</span><img src="hero-'+slug+'.jpg" alt="" onerror="this.remove()"></span>';
 };
 let selectedHero = heroes[0];
+let selectedHeroTab = 'Stats';
 let search = '';
 function roster() {
   view.innerHTML = scanControls('Scan All Heroes','Scan Stars and Skills') +
@@ -98,10 +101,47 @@ function roster() {
     selectedHero = hero;
     for (const button of list.querySelectorAll('button')) button.setAttribute('aria-pressed', String(button.dataset.hero === hero.name));
     const {name,stats,progress} = hero;
-    detail.innerHTML = heroArt(name)+'<h2>'+esc(name)+'</h2>'+metrics([
-      ['Level',stats.Level],['CP',stats.Power],['ATK',stats.ATK],['DEF',stats.DEF],['Troop size',stats.TroopSize],
-      ['Stars',progress.FullStars == null ? null : progress.FullStars+' / 5']
-    ])+(progress.Skills?.length ? '<h3>Skills</h3><p>'+esc(Array.isArray(progress.Skills) ? progress.Skills.join(', ') : progress.Skills)+'</p>' : '');
+    const slug = heroSlug(name);
+    const art = heroDetailArt[slug] || {};
+    const skillLevels = Array.isArray(progress.Skills) ? progress.Skills : [];
+    const stars = progress.FullStars;
+    detail.innerHTML = heroArt(name)+'<h2>'+esc(name)+'</h2><div class="tabs hero-tabs" aria-label="Hero details"></div><div class="hero-tab-content"></div>';
+    const tabs = detail.querySelector('.hero-tabs');
+    const panel = detail.querySelector('.hero-tab-content');
+    const equipment = ['Weapon','Helmet','Armor','Boots'];
+    const skillNames = ['Skill 1','Skill 2','Skill 3','Skill 4'];
+    function tiles(labels,row,values=[]) {
+      return '<div class="hero-tiles">'+labels.map((label,index)=>
+        '<div class="hero-tile"><span class="hero-detail-icon" aria-hidden="true" style="background-image:url(hero-details-'+slug+'.jpg);background-position:'+index/3*100+'% '+row+'%"></span><strong>'+label+'</strong>'+
+        (values[index] == null ? '' : '<small>'+esc(typeof values[index] === 'number' ? 'Lv. '+values[index] : values[index])+'</small>')+'</div>'
+      ).join('')+'</div>';
+    }
+    const panels = {
+      Stats: () => metrics([
+        ['Level',stats.Level],['CP',stats.Power],['ATK',stats.ATK],['DEF',stats.DEF],
+        ['Troop size',stats.TroopSize],['Stars',stars == null ? null : stars+' / 5']
+      ]),
+      Equipment: () => art.gear ? tiles(equipment,0) : '<p class="muted">No equipment capture saved for this hero.</p>',
+      Skills: () => art.skills ? tiles(skillNames,100,skillLevels) :
+        skillLevels.length ? metrics(skillNames.map((label,index)=>[label,skillLevels[index]])) :
+        '<p class="muted">No skills captured for this hero.</p>',
+      'Star Up': () => stars == null ? '<p class="muted">No star progress captured for this hero.</p>' :
+        '<div class="hero-stars" aria-hidden="true">'+'★'.repeat(stars)+'☆'.repeat(5-stars)+'</div><p>'+stars+' of 5 stars'+
+        (stars < 5 && progress.StarSegments != null ? ' · '+esc(progress.StarSegments)+' of 5 segments toward the next star' : '')+'</p>'
+    };
+    function openTab(tab) {
+      selectedHeroTab = tab;
+      for (const button of tabs.querySelectorAll('button')) button.setAttribute('aria-pressed',String(button.textContent === tab));
+      panel.innerHTML = panels[tab]();
+    }
+    for (const tab of Object.keys(panels)) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = tab;
+      button.addEventListener('click',()=>openTab(tab));
+      tabs.append(button);
+    }
+    openTab(selectedHeroTab);
   }
   function filter() {
     const matches = heroes.filter(hero => hero.name.toLowerCase().includes(search.trim().toLowerCase()));

@@ -77,3 +77,12 @@ body {
 .cp-breakdown dd{display:grid;grid-template-columns:auto 4rem;gap:.35rem;align-items:center;font-variant-numeric:tabular-nums;font-size:.85rem}
 .cp-breakdown dd span{color:var(--muted)}
 .cp-breakdown dd strong{color:var(--ink);font-size:1rem}
+
+.hero-tabs button{flex:1 1 auto;text-align:center;padding:6px 8px}
+.hero-tab-content{min-height:105px}
+.hero-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,70px),1fr));gap:8px}
+.hero-tile{display:grid;justify-items:center;align-content:start;text-align:center;gap:4px;padding:6px 3px;background:var(--surface);border-radius:5px}
+.hero-detail-icon{display:block;width:min(100%,68px);aspect-ratio:1;background-size:400% 200%;background-repeat:no-repeat;border-radius:6px}
+.hero-tile strong,.hero-tile small{font-size:.8rem}
+.hero-tile small{color:var(--teal)}
+.hero-stars{color:var(--gold);font-size:clamp(1.5rem,4vw,2.1rem);letter-spacing:.08em}
