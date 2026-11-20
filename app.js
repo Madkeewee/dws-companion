@@ -74,34 +74,63 @@ function home(section='Dashboard') {
   view.insertAdjacentHTML('beforeend','<div class="home-grid"><div class="stack">'+activity+record+'</div>'+card('CP Breakdown',donut+breakdown)+'<div class="art" role="img" aria-label="Armored vehicle in a hangar"></div></div>');
 }
 const newest = [...data.History].reverse();
+const heroes = [...new Set(newest.map(entry => entry.Hero).filter(Boolean))].map(name => {
+  const stats = newest.find(entry => entry.Hero === name && entry.Level != null) || {};
+  const progress = newest.find(entry => entry.Hero === name && entry.FullStars != null) || {};
+  return { name, stats, progress };
+}).sort((a,b) => (b.stats.Power || 0) - (a.stats.Power || 0));
+const heroArt = name => {
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  return '<span class="hero-art"><span aria-hidden="true">'+esc(name[0])+'</span><img src="hero-'+slug+'.jpg" alt="" onerror="this.remove()"></span>';
+};
+let selectedHero = heroes[0];
+let search = '';
 function roster() {
-  const names=[...new Set(newest.filter(x=>x.Hero).map(x=>x.Hero))];
-  const combined=names.map(name=>{
-    const s=newest.find(x=>x.Hero===name&&x.Level!=null)||{};
-    const p=newest.find(x=>x.Hero===name&&x.FullStars!=null)||{};
-    return [name,s.Level,s.Power,s.ATK,s.DEF,s.TroopSize,p.FullStars==null?null:p.FullStars+' + '+(p.StarSegments||0)+'/5',Array.isArray(p.Skills)?p.Skills.join(', '):p.Skills];
-  }).sort((a,b)=>(b[2]||0)-(a[2]||0));
-  view.innerHTML=scanControls('Scan All Heroes','Scan Stars and Skills')+card('Hero Roster · '+names.length,table(['Hero','Lv.','CP','ATK','DEF','Troop size','Stars','Skills'],combined));
+  view.innerHTML = scanControls('Scan All Heroes','Scan Stars and Skills') +
+    '<div class="roster-layout"><section class="card"><h3>'+heroes.length+' heroes</h3><input class="hero-search" type="search" aria-label="Search heroes" placeholder="Search heroes"><div class="hero-list"></div></section><section class="card hero-detail"></section></div>';
+  const input = view.querySelector('.hero-search');
+  const list = view.querySelector('.hero-list');
+  const detail = view.querySelector('.hero-detail');
+  function selectHero(hero) {
+    selectedHero = hero;
+    for (const button of list.querySelectorAll('button')) button.setAttribute('aria-pressed', String(button.dataset.hero === hero.name));
+    const {name,stats,progress} = hero;
+    detail.innerHTML = heroArt(name)+'<h2>'+esc(name)+'</h2>'+metrics([
+      ['Level',stats.Level],['CP',stats.Power],['ATK',stats.ATK],['DEF',stats.DEF],['Troop size',stats.TroopSize],
+      ['Stars',progress.FullStars == null ? null : progress.FullStars+' / 5']
+    ])+(progress.Skills?.length ? '<h3>Skills</h3><p>'+esc(Array.isArray(progress.Skills) ? progress.Skills.join(', ') : progress.Skills)+'</p>' : '');
+  }
+  function filter() {
+    const matches = heroes.filter(hero => hero.name.toLowerCase().includes(search.trim().toLowerCase()));
+    list.innerHTML = matches.map(hero => '<button data-hero="'+esc(hero.name)+'">'+heroArt(hero.name)+'<strong>'+esc(hero.name)+'</strong><span>'+esc(hero.stats.Power)+'</span></button>').join('') || '<p>No matching heroes.</p>';
+    [...list.querySelectorAll('button')].forEach((button,index) => button.addEventListener('click', () => selectHero(matches[index])));
+    if (matches.length) selectHero(matches.includes(selectedHero) ? selectedHero : matches[0]);
+    else detail.innerHTML = '';
+  }
+  input.value = search;
+  input.addEventListener('input', () => { search = input.value; filter(); });
+  filter();
 }
 function formation(section='March 1') {
   view.replaceChildren(tabs(['March 1','March 2','March 3','March 4'],section,formation));
   const march=Number(section.at(-1));
   const current=newest.find(x=>x.Troop===march)||{};
-  const lineup=newest.find(x=>x.Troop===march&&x.Heroes?.length)?.Heroes||[];
+  const lineup=(newest.filter(x=>x.Troop===march&&x.Heroes?.length)
+    .sort((a,b)=>b.Heroes.filter(Boolean).length-a.Heroes.filter(Boolean).length)[0]?.Heroes||[]).filter(Boolean);
   const counts=newest.find(x=>x.Troop===march&&x.UnitCounts)?.UnitCounts||{};
   view.insertAdjacentHTML('beforeend',card(section,metrics([['Combat power',current.Power],['Troops',current.CurrentTroops],['Capacity',current.TroopCapacity],['Type',current.FormationType],['Bonus',current.Bonus==null?null:current.Bonus+'%'],['Chip preset',current.ChipPreset]])+
-    '<h3>Lineup</h3><ol>'+lineup.map(hero=>'<li>'+esc(hero)+'</li>').join('')+'</ol>'+rows(Object.entries(counts))));
+    '<div class="formation-art" role="img" aria-label="APC in a hangar"></div><h3>Lineup</h3><ol class="lineup">'+lineup.map(hero=>'<li>'+heroArt(hero)+'<strong>'+esc(hero)+'</strong></li>').join('')+'</ol>'+rows(Object.entries(counts))));
 }
 const workshopPresets=[['I','Fighter',9560000,3,[3,3,3,3]],['II','Shooter',6570000,2,[2,2,2,2]],['III','Rider',6570000,2,[2,2,2,2]],['IV','Fighter',3844000,0,[2,1,2,3]]];
 function modding(section='Overview',preset='I') {
   view.replaceChildren(tabs(['Overview','Chips'],section,modding));
   if(section==='Overview'){
-    view.insertAdjacentHTML('beforeend',card('Armored Personnel Carrier',metrics([['APC level','284 · 53%'],['CP',27883200],['ATK','+42,600'],['DEF','+42,600'],['Troop size','+1,920']])+table(['Part','Tier','Level'],[['Engine',2,25],['Armor',2,24],['Chassis',2,24],['Weapon',2,25],['Optics',2,24],['Comms',2,25]])));
+    view.insertAdjacentHTML('beforeend',card('Armored Personnel Carrier',metrics([['APC level','284 · 53%'],['CP',27883200],['ATK','+42,600'],['DEF','+42,600'],['Troop size','+1,920']])+'<div class="workshop-art"><img class="apc" src="apc.jpg" alt="Armored personnel carrier">'+[['Engine',25],['Armor',24],['Chassis',24],['Weapon',25],['Optics',24],['Comms',25]].map(([part,level])=>'<div class="part"><img src="'+part.toLowerCase()+'.jpg" alt=""><strong>'+part+'</strong><small>Tier 2 · Lv. '+level+'</small></div>').join('')+'</div>'));
     return;
   }
   view.append(tabs(workshopPresets.map(p=>p[0]),preset,selected=>modding('Chips',selected)));
   const selected=workshopPresets.find(p=>p[0]===preset);
-  view.insertAdjacentHTML('beforeend',card(selected[1]+' Chipset',metrics([['Combat power',selected[2]],['Resonance','★'.repeat(selected[3])+'☆'.repeat(5-selected[3])]])+rows(['Weapon','Vehicle core','Radar','Shield'].map((name,i)=>[name,'◆'.repeat(selected[4][i])+'◇'.repeat(5-selected[4][i])])), 'chip-art'));
+  view.insertAdjacentHTML('beforeend',card(selected[1]+' Chipset',metrics([['Combat power',selected[2]],['Resonance','★'.repeat(selected[3])+'☆'.repeat(5-selected[3])]])+'<div class="chip-board">'+[['Weapon','weapon-chip'],['Vehicle core','vehicle-core'],['Radar','radar'],['Shield','shield']].map(([name,file],i)=>'<div class="chip-node"><img src="'+file+'.jpg" alt=""><strong>'+name+'</strong><span>'+'◆'.repeat(selected[4][i])+'◇'.repeat(5-selected[4][i])+'</span></div>').join('')+'</div>', 'chip-art'));
 }
 function research(section=Object.keys(data.Research)[0]) {
   view.replaceChildren(tabs(Object.keys(data.Research),section,research));
