@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Madkeewee’s DWS Companion dashboard for Dark War: Survival.">
+<title>DWS Companion</title>
+<link rel="stylesheet" href="style.css">
+<script src="data.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to dashboard</a>
+<aside>
+<button class="brand" data-page="Home" aria-label="DWS Companion Home"><span aria-hidden="true">★</span><strong>DWS<br>Companion</strong></button>
+<nav aria-label="Dashboard">
+<button data-page="Hero Roster">Hero Roster</button>
+<button data-page="Formation">Formation</button>
+<button data-page="Modding Workstation">Modding Workstation</button>
+<button data-page="Research">Research</button>
+</nav>
+<nav class="lower" aria-label="Records">
+<button data-page="Progress History">Progress History</button>
+<button data-page="Review">Review</button>
+</nav>
+</aside>
+<main id="main" tabindex="-1">
+<header><h1 id="heading">Home</h1><span>Saved account snapshot</span></header>
+<div id="view"></div>
+<noscript>Enable JavaScript to view the dashboard.</noscript>
+</main>
+</body>
+</html>
