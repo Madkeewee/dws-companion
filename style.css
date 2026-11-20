@@ -70,3 +70,10 @@ body {
     width: min(100%, 230px);
   }
 }
+
+.cp-breakdown div{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.cp-breakdown dt{display:flex;align-items:center;gap:.5rem;line-height:1.25}
+.cp-swatch{flex:none;width:.8rem;height:.8rem;border-radius:3px}
+.cp-breakdown dd{display:grid;grid-template-columns:auto 4rem;gap:.35rem;align-items:center;font-variant-numeric:tabular-nums;font-size:.85rem}
+.cp-breakdown dd span{color:var(--muted)}
+.cp-breakdown dd strong{color:var(--ink);font-size:1rem}
